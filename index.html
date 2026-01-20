@@ -530,19 +530,47 @@
                     card.className = 'border border-gray-800 rounded p-3 text-sm break-inside-avoid shadow-sm bg-white';
 
                     card.innerHTML = `
-                        <div class="space-y-2">
-                            <div class="flex flex-col sm:flex-row gap-2 border-b border-gray-200 pb-2">
-                                <div class="font-bold whitespace-nowrap text-gray-700 w-32">Data de início: <span class="font-normal text-black">${dateFormatted}</span></div>
-                                <div class="font-bold text-gray-700 flex-1">Atividade: <span class="font-normal text-black">${activityVal}</span></div>
+                        <div class="flex flex-col gap-2">
+                            <!-- Row 1: Date Header -->
+                            <div class="border-b border-gray-200 pb-1">
+                                <span class="font-bold text-gray-800 text-xs uppercase block">Data de início</span>
+                                <span class="text-black font-semibold">${dateFormatted}</span>
                             </div>
-                            <div class="flex flex-col sm:flex-row gap-4">
-                                <div class="flex-1 font-bold text-gray-700">Responsável: <span class="font-normal text-black">${respVal}</span></div>
-                                <div class="flex-1 font-bold text-gray-700">Local: <span class="font-normal text-black">${localVal}</span></div>
+
+                            <!-- Row 2: Activity Description -->
+                            <div class="border-b border-gray-200 pb-2">
+                                <span class="font-bold text-gray-800 text-xs uppercase block">Atividade</span>
+                                <span class="text-black block mt-1">${activityVal}</span>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 text-xs pt-2 bg-gray-50 p-2 rounded">
-                                <div><span class="font-bold text-gray-600 block">R. Humanos</span>${recHumVal}</div>
-                                <div><span class="font-bold text-gray-600 block">R. Materiais</span>${recMatVal}</div>
-                                <div><span class="font-bold text-gray-600 block">R. Financeiros</span>${recFinVal}</div>
+                            
+                            <!-- Row 3: Resp & Local -->
+                            <div class="flex flex-col sm:flex-row gap-4 border-b border-gray-200 pb-2">
+                                <div class="flex-1">
+                                    <span class="font-bold text-gray-800 text-xs uppercase block">Responsável</span>
+                                    <span class="text-black text-sm">${respVal}</span>
+                                </div>
+                                <div class="flex-1">
+                                    <span class="font-bold text-gray-800 text-xs uppercase block">Local</span>
+                                    <span class="text-black text-sm">${localVal}</span>
+                                </div>
+                            </div>
+
+                            <!-- Row 4: Resources -->
+                            <div class="bg-gray-50 p-2 rounded border border-gray-200">
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div>
+                                        <span class="font-bold text-gray-600 block mb-1">R. Humanos</span>
+                                        <div class="text-black min-h-[1rem] break-words">${recHumVal}</div>
+                                    </div>
+                                    <div class="border-l border-gray-300 pl-2">
+                                        <span class="font-bold text-gray-600 block mb-1">R. Materiais</span>
+                                        <div class="text-black min-h-[1rem] break-words">${recMatVal}</div>
+                                    </div>
+                                    <div class="border-l border-gray-300 pl-2">
+                                        <span class="font-bold text-gray-600 block mb-1">R. Financeiros</span>
+                                        <div class="text-black min-h-[1rem] break-words">${recFinVal}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;

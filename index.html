@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Plano de Trabalho</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        @media screen and (max-width: 768px) {
+            .a4-page {
+                width: 100%;
+                padding: 1rem;
+            }
+        }
+
+        /* Hide buttons during print/pdf generation if needed, though we select specific element */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #preview-container,
+            #preview-container * {
+                visibility: visible;
+            }
+
+            #preview-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white p-4 shadow-md z-10">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Gerador de Plano de Trabalho
+            </h1>
+            <div class="space-x-2">
+                <button onclick="generateWord()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition text-sm font-medium flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Baixar Word
+                </button>
+                <button onclick="generatePDF()"
+                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow transition text-sm font-medium flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    Baixar PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- Editor Column (Left) -->
+        <div class="w-1/2 overflow-y-auto p-6 bg-gray-50 border-r border-gray-200">
+            <div class="max-w-2xl mx-auto space-y-6">
+
+                <!-- 1. Identificação -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">1. Identificação</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Título do Projeto</label>
+                            <input type="text" id="input-titulo"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                                placeholder="Ex: Revitalização da Biblioteca">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Embaixador Responsável</label>
+                                <input type="text" id="input-responsavel"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">NRE</label>
+                                <select id="input-nre"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                                    <option value="">Selecione...</option>
+                                    <option>Apucarana</option>
+                                    <option>Área Norte</option>
+                                    <option>Área Sul</option>
+                                    <option>Assis Chateaubriand</option>
+                                    <option>Campo Mourão</option>
+                                    <option>Cascavel</option>
+                                    <option>Cianorte</option>
+                                    <option>Cornélio Procópio</option>
+                                    <option>Curitiba</option>
+                                    <option>Dois Vizinhos</option>
+                                    <option>F. Beltrão</option>
+                                    <option>Foz do Iguaçu</option>
+                                    <option>Goioerê</option>
+                                    <option>Guarapuava</option>
+                                    <option>Ibaiti</option>
+                                    <option>Irati</option>
+                                    <option>Ivaiporã</option>
+                                    <option>Jacarezinho</option>
+                                    <option>Laranjeiras do Sul</option>
+                                    <option>Loanda</option>
+                                    <option>Londrina</option>
+                                    <option>Maringá</option>
+                                    <option>Paranaguá</option>
+                                    <option>Paranavaí</option>
+                                    <option>Pato Branco</option>
+                                    <option>Pitanga</option>
+                                    <option>Ponta Grossa</option>
+                                    <option>Telêmaco</option>
+                                    <option>Toledo</option>
+                                    <option>Umuarama</option>
+                                    <option>União da Vitória</option>
+                                    <option>Wenceslau</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Período de Execução</label>
+                            <div class="flex gap-2 items-center mt-1">
+                                <input type="date" id="input-periodo-inicio"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                                <span class="text-gray-500">até</span>
+                                <input type="date" id="input-periodo-fim"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Justificativa -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">2. Justificativa</h2>
+                    <textarea id="input-justificativa" rows="4"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                        placeholder="Descreva o contexto, problema ou necessidade..."></textarea>
+                </section>
+
+                <!-- 3. Objetivos -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">3. Objetivos</h2>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Objetivo Geral</label>
+                        <textarea id="input-objetivo-geral" rows="2"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Objetivos Específicos</label>
+                        <div id="container-objetivos-especificos" class="space-y-2 mt-1">
+                            <input type="text"
+                                class="obj-esp-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                                placeholder="Objetivo específico">
+                        </div>
+                        <button type="button" onclick="addObjEspecifico()"
+                            class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            Adicionar Objetivo
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 4. Atividades a Desenvolver -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">4. Atividades a Desenvolver</h2>
+                    <textarea id="input-atividades" rows="4"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                        placeholder="Liste as principais atividades..."></textarea>
+                </section>
+
+                <!-- 5. Metodologia -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">5. Metodologia</h2>
+                    <textarea id="input-metodologia" rows="4"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                        placeholder="Explique como as atividades serão executadas..."></textarea>
+                </section>
+
+                <!-- 6. Cronograma -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">6. Cronograma</h2>
+                    <div id="container-cronograma" class="space-y-4">
+                        <!-- Dynamic cronograma items will appear here -->
+                    </div>
+                    <button type="button" onclick="addCronogramaItem()"
+                        class="mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Adicionar Atividade
+                    </button>
+                </section>
+
+                <!-- 7. Recursos Necessários -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">7. Recursos Necessários</h2>
+                    <textarea id="input-recursos" rows="4"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                        placeholder="Descreva os recursos humanos, materiais e financeiros necessários..."></textarea>
+                </section>
+
+                <!-- 8. Resultados Esperados -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">8. Resultados Esperados</h2>
+                    <textarea id="input-resultados" rows="4"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                        placeholder="Descreva os resultados e benefícios esperados..."></textarea>
+                </section>
+
+                <!-- 9. Avaliação e Acompanhamento -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">9. Avaliação e Acompanhamento
+                    </h2>
+                    <textarea id="input-avaliacao" rows="4"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                        placeholder="Liste aqui quais são os itens a serem acompanhados para verificar o sucesso da ação, por exemplo, números de atribuição, questões respondidas, etc"></textarea>
+                </section>
+
+                <!-- 10. Assinaturas -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 mb-10">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">10. Assinaturas</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nome Responsável</label>
+                            <input type="text" id="input-sig-resp"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nome Supervisor</label>
+                            <input type="text" id="input-sig-sup"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- Preview Column (Right) -->
+        <div class="w-1/2 overflow-y-auto bg-gray-200 p-8 flex justify-center">
+            <div id="preview-container" class="a4-page text-black">
+                <!-- Document Content Starts Here -->
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl font-bold uppercase mb-2">Plano de Trabalho</h1>
+                    <div class="w-full h-1 bg-black mb-1"></div>
+                    <div class="w-full h-0.5 bg-black"></div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">1. Identificação</h3>
+                    <table class="w-full text-sm border-collapse">
+                        <tr>
+                            <td class="font-bold py-1 w-48">Título do Projeto:</td>
+                            <td id="prev-titulo" class="py-1 border-b border-dotted border-gray-400"></td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold py-1">Embaixador Responsável:</td>
+                            <td id="prev-responsavel" class="py-1 border-b border-dotted border-gray-400"></td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold py-1">NRE:</td>
+                            <td id="prev-nre" class="py-1 border-b border-dotted border-gray-400"></td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold py-1">Período:</td>
+                            <td id="prev-periodo" class="py-1 border-b border-dotted border-gray-400"></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Sections generated dynamically share common structure -->
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">2. Justificativa</h3>
+                    <p id="prev-justificativa" class="text-sm text-justify whitespace-pre-wrap min-h-[2em]"></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">3. Objetivos</h3>
+                    <div class="mb-2">
+                        <span class="font-bold text-sm block">Objetivo Geral:</span>
+                        <p id="prev-objetivo-geral" class="text-sm text-justify whitespace-pre-wrap"></p>
+                    </div>
+                    <div>
+                        <span class="font-bold text-sm block">Objetivos Específicos:</span>
+                        <ul id="prev-objetivos-especificos" class="list-disc list-inside text-sm pl-2">
+                            <!-- Dynamic list items -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">4. Atividades a Desenvolver
+                    </h3>
+                    <p id="prev-atividades" class="text-sm text-justify whitespace-pre-wrap"></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">5. Metodologia</h3>
+                    <p id="prev-metodologia" class="text-sm text-justify whitespace-pre-wrap"></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">6. Cronograma</h3>
+                    <table class="w-full border-collapse border border-gray-800 text-sm text-center">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-800 p-1 w-20">Data de início da atividade</th>
+                                <th class="border border-gray-800 p-1 text-left pl-2">Atividade</th>
+                                <th class="border border-gray-800 p-1 w-24">Responsável</th>
+                                <th class="border border-gray-800 p-1 w-24">Local</th>
+                                <th class="border border-gray-800 p-1 w-20">R. Hum</th>
+                                <th class="border border-gray-800 p-1 w-20">R. Mat</th>
+                                <th class="border border-gray-800 p-1 w-20">R. Fin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prev-cronograma-body">
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">7. Recursos Necessários</h3>
+                    <p id="prev-recursos" class="text-sm text-justify whitespace-pre-wrap"></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">8. Resultados Esperados</h3>
+                    <p id="prev-resultados" class="text-sm text-justify whitespace-pre-wrap"></p>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">9. Avaliação e Acompanhamento
+                    </h3>
+                    <p id="prev-avaliacao" class="text-sm text-justify whitespace-pre-wrap"></p>
+                </div>
+
+                <div class="mt-12 pt-8">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-8">10. Assinaturas</h3>
+                    <div class="flex justify-between mt-12 px-4 gap-8">
+                        <div class="flex-1 text-center">
+                            <div class="border-t border-black w-full mb-2"></div>
+                            <p id="prev-sig-resp" class="font-bold text-sm"></p>
+                            <p class="text-xs text-gray-600">Responsável pelo plano</p>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <div class="border-t border-black w-full mb-2"></div>
+                            <p id="prev-sig-sup" class="font-bold text-sm"></p>
+                            <p class="text-xs text-gray-600">Supervisor/Orientador</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 text-right text-sm">
+                        Data: ____/____/________
+                    </div>
+                </div>
+
+                <!-- Document Content Ends Here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mappings for simple text fields
+        const textMappings = {
+            'input-titulo': 'prev-titulo',
+            'input-responsavel': 'prev-responsavel',
+            'input-justificativa': 'prev-justificativa',
+            'input-objetivo-geral': 'prev-objetivo-geral',
+            'input-atividades': 'prev-atividades',
+            'input-metodologia': 'prev-metodologia',
+            'input-recursos': 'prev-recursos',
+            'input-resultados': 'prev-resultados',
+            'input-avaliacao': 'prev-avaliacao',
+            'input-sig-resp': 'prev-sig-resp',
+            'input-sig-sup': 'prev-sig-sup'
+        };
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Text inputs
+            for (const [inputId, prevId] of Object.entries(textMappings)) {
+                const input = document.getElementById(inputId);
+                const prev = document.getElementById(prevId);
+
+                if (input && prev) {
+                    input.addEventListener('input', () => {
+                        prev.textContent = input.value;
+                    });
+                }
+            }
+
+            // NRE Select
+            const nreInput = document.getElementById('input-nre');
+            const nrePrev = document.getElementById('prev-nre');
+            if (nreInput && nrePrev) {
+                nreInput.addEventListener('change', () => {
+                    nrePrev.textContent = nreInput.value;
+                });
+            }
+
+            // Date Handling
+            const dateStart = document.getElementById('input-periodo-inicio');
+            const dateEnd = document.getElementById('input-periodo-fim');
+            const datePrev = document.getElementById('prev-periodo');
+
+            function updateDate() {
+                const s = dateStart.value ? new Date(dateStart.value).toLocaleDateString('pt-BR') : '...';
+                const e = dateEnd.value ? new Date(dateEnd.value).toLocaleDateString('pt-BR') : '...';
+
+                if (dateStart.value || dateEnd.value) {
+                    datePrev.textContent = `${s} a ${e}`;
+                } else {
+                    datePrev.textContent = '';
+                }
+            }
+            if (dateStart) dateStart.addEventListener('change', updateDate);
+            if (dateEnd) dateEnd.addEventListener('change', updateDate);
+
+            // Specific Objectives - Initial Listener
+            attachObjectiveListeners();
+
+            // Cronograma - Initial Item
+            addCronogramaItem();
+        });
+
+        // Cronograma Logic
+        function addCronogramaItem() {
+            const container = document.getElementById('container-cronograma');
+            const div = document.createElement('div');
+            div.className = 'flex flex-col gap-2 border p-3 rounded-lg bg-gray-50';
+
+            div.innerHTML = `
+                <div class="flex flex-col">
+                    <label class="text-xs text-gray-500 font-medium">Data de início da atividade</label>
+                    <input type="date" class="crono-date block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs text-gray-500 font-medium">Atividade</label>
+                    <input type="text" class="crono-activity block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Descrição da atividade">
+                </div>
+                <div class="flex gap-2">
+                    <div class="w-1/2 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Responsável</label>
+                        <input type="text" class="crono-resp block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Nome">
+                    </div>
+                    <div class="w-1/2 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Local</label>
+                        <input type="text" class="crono-local block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Local">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="w-1/3 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Rec. Humanos</label>
+                        <input type="text" class="crono-rec-hum block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Humanos">
+                    </div>
+                    <div class="w-1/3 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Rec. Materiais</label>
+                        <input type="text" class="crono-rec-mat block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Materiais">
+                    </div>
+                    <div class="w-1/3 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Rec. Financeiros</label>
+                        <input type="text" class="crono-rec-fin block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Financeiros">
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(div);
+
+            // Attach listeners to new inputs
+            const inputs = div.querySelectorAll('input');
+            inputs.forEach(inp => inp.addEventListener('input', updateCronograma));
+        }
+
+        function updateCronograma() {
+            const container = document.getElementById('container-cronograma');
+            const items = container.querySelectorAll('#container-cronograma > div');
+            const tbody = document.getElementById('prev-cronograma-body');
+            tbody.innerHTML = '';
+
+            items.forEach(item => {
+                const dateVal = item.querySelector('.crono-date').value;
+                let dateFormatted = '';
+                if (dateVal) {
+                    const [y, m, d] = dateVal.split('-');
+                    dateFormatted = `${d}/${m}/${y}`;
+                }
+
+                const activityVal = item.querySelector('.crono-activity').value;
+                const respVal = item.querySelector('.crono-resp').value;
+                const localVal = item.querySelector('.crono-local').value;
+                const recHumVal = item.querySelector('.crono-rec-hum').value;
+                const recMatVal = item.querySelector('.crono-rec-mat').value;
+                const recFinVal = item.querySelector('.crono-rec-fin').value;
+
+                if (dateVal || activityVal || respVal || localVal) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="border border-gray-800 p-1 text-center whitespace-nowrap">${dateFormatted}</td>
+                        <td class="border border-gray-800 p-1 text-left pl-2">${activityVal}</td>
+                        <td class="border border-gray-800 p-1 text-center">${respVal}</td>
+                        <td class="border border-gray-800 p-1 text-center">${localVal}</td>
+                        <td class="border border-gray-800 p-1 text-center text-xs">${recHumVal}</td>
+                        <td class="border border-gray-800 p-1 text-center text-xs">${recMatVal}</td>
+                        <td class="border border-gray-800 p-1 text-center text-xs">${recFinVal}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            if (tbody.children.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td class="border border-gray-800 p-1">&nbsp;</td><td class="border border-gray-800 p-1"></td><td class="border border-gray-800 p-1"></td><td class="border border-gray-800 p-1"></td><td class="border border-gray-800 p-1"></td><td class="border border-gray-800 p-1"></td><td class="border border-gray-800 p-1"></td>';
+                tbody.appendChild(tr);
+            }
+        }
+
+        function attachObjectiveListeners() {
+            const inputs = document.querySelectorAll('.obj-esp-input');
+            inputs.forEach(input => {
+                input.removeEventListener('input', updateObjectives);
+                input.addEventListener('input', updateObjectives);
+            });
+        }
+
+        function updateObjectives() {
+            const objList = document.getElementById('prev-objetivos-especificos');
+            objList.innerHTML = '';
+            const inputs = document.querySelectorAll('.obj-esp-input');
+            inputs.forEach(input => {
+                const val = input.value;
+                if (val.trim()) {
+                    const li = document.createElement('li');
+                    li.textContent = val;
+                    objList.appendChild(li);
+                }
+            });
+        }
+
+        function addObjEspecifico() {
+            const container = document.getElementById('container-objetivos-especificos');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'obj-esp-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border mt-2';
+            input.placeholder = 'Outro objetivo específico';
+            container.appendChild(input);
+            attachObjectiveListeners();
+        }
+
+        function generatePDF() {
+            const element = document.getElementById('preview-container');
+            const opt = {
+                margin: 0,
+                filename: 'Plano_de_Trabalho.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function generateWord() {
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                "xmlns='http://www.w3.org/TR/REC-html40'>" +
+                "<head><meta charset='utf-8'><title>Plano de Trabalho</title></head><body>";
+            const footer = "</body></html>";
+            const element = document.getElementById('preview-container').innerHTML;
+            const styles = `
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { border-collapse: collapse; width: 100%; }
+                    td, th { border: 1px solid black; padding: 5px; }
+                    .no-border { border: none; }
+                    h1, h2, h3 { color: black; }
+                </style>
+            `;
+            const sourceHTML = header + styles + element + footer;
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const fileDownload = document.createElement("a");
+            document.body.appendChild(fileDownload);
+            fileDownload.href = source;
+            fileDownload.download = 'Plano_de_Trabalho.doc';
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+        }
+    </script>
+</body>
+
+</html>

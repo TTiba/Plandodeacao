@@ -60,19 +60,21 @@
 <body class="h-screen flex flex-col overflow-hidden">
 
     <!-- Header -->
-    <header class="bg-indigo-600 text-white p-4 shadow-md z-10">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+    <!-- Header -->
+    <header class="relative text-white shadow-md z-10 h-24 flex items-center"
+        style="background-image: url('https://desafio.pr.gov.br/assets/header_banner_v2-CgrgrDVj.png'); background-size: cover; background-position: left center;">
+        <!-- Overlay to ensure text readability if needed, or just relying on banner -->
+        <div class="absolute inset-0 bg-blue-900/10"></div>
+
+        <div class="container mx-auto flex justify-between items-center relative z-20 px-4">
+            <h1 class="text-xl font-bold flex items-center gap-2 text-white drop-shadow-md"
+                style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                <!-- Icon removed as logo is likely in banner, or keep icon? User said keep logo left. Steps say "Ensure logo (in image) is positioned left". So image has logo. -->
                 Gerador de Plano de Trabalho
             </h1>
             <div class="space-x-2">
                 <button onclick="generateWord()"
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition text-sm font-medium flex items-center gap-2">
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition text-sm font-medium flex items-center gap-2 border border-blue-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -81,7 +83,7 @@
                     Baixar Word
                 </button>
                 <button onclick="generatePDF()"
-                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow transition text-sm font-medium flex items-center gap-2">
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow transition text-sm font-medium flex items-center gap-2 border border-red-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

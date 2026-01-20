@@ -268,111 +268,13 @@
 
         <!-- Preview Column (Right) -->
         <div class="w-1/2 overflow-y-auto bg-gray-200 p-8 flex justify-center">
-            <div id="preview-container" class="a4-page text-black">
-                <!-- Document Content Starts Here -->
-                <div class="relative mb-8 text-center h-40 overflow-hidden rounded-lg shadow-sm border border-gray-200">
-                    <img src="https://desafio.pr.gov.br/assets/header_banner_v2-CgrgrDVj.png" alt="Banner"
-                        class="w-full h-full object-cover object-center">
-                    <img src="./carimbo.png" alt="Carimbo"
-                        class="absolute bottom-[-10px] right-[10%] w-40 opacity-90 mix-blend-multiply transform -rotate-12 pointer-events-none">
+            <!-- Container for pages -->
+            <div id="print-area" class="flex flex-col gap-8 w-[210mm] print:gap-0">
+                <!-- Pages will be injected here by JS -->
+                <div class="a4-page bg-white shadow-lg p-[20mm] min-h-[297mm] relative">
+                    <!-- Initial Placeholder -->
+                    <p class="text-gray-400 text-center mt-20">O documento aparecerá aqui...</p>
                 </div>
-
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">1. Identificação</h3>
-                    <table class="w-full text-sm border-collapse">
-                        <tr>
-                            <td class="font-bold py-1 w-48">Título do Projeto:</td>
-                            <td id="prev-titulo" class="py-1 border-b border-dotted border-gray-400"></td>
-                        </tr>
-                        <tr>
-                            <td class="font-bold py-1">Embaixador Responsável:</td>
-                            <td id="prev-responsavel" class="py-1 border-b border-dotted border-gray-400"></td>
-                        </tr>
-                        <tr>
-                            <td class="font-bold py-1">NRE:</td>
-                            <td id="prev-nre" class="py-1 border-b border-dotted border-gray-400"></td>
-                        </tr>
-                        <tr>
-                            <td class="font-bold py-1">Período:</td>
-                            <td id="prev-periodo" class="py-1 border-b border-dotted border-gray-400"></td>
-                        </tr>
-                    </table>
-                </div>
-
-                <!-- Sections generated dynamically share common structure -->
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">2. Justificativa</h3>
-                    <p id="prev-justificativa" class="text-sm text-justify whitespace-pre-wrap min-h-[2em]"></p>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">3. Objetivos</h3>
-                    <div class="mb-2">
-                        <span class="font-bold text-sm block">Objetivo Geral:</span>
-                        <p id="prev-objetivo-geral" class="text-sm text-justify whitespace-pre-wrap"></p>
-                    </div>
-                    <div>
-                        <span class="font-bold text-sm block">Objetivos Específicos:</span>
-                        <ul id="prev-objetivos-especificos" class="list-disc list-inside text-sm pl-2">
-                            <!-- Dynamic list items -->
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">4. Atividades a Desenvolver
-                    </h3>
-                    <p id="prev-atividades" class="text-sm text-justify whitespace-pre-wrap"></p>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">5. Metodologia</h3>
-                    <p id="prev-metodologia" class="text-sm text-justify whitespace-pre-wrap"></p>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">6. Cronograma</h3>
-                    <div id="prev-cronograma-container" class="flex flex-col gap-4">
-                        <!-- Dynamic cronograma items will appear here -->
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">7. Recursos Necessários</h3>
-                    <p id="prev-recursos" class="text-sm text-justify whitespace-pre-wrap"></p>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">8. Resultados Esperados</h3>
-                    <p id="prev-resultados" class="text-sm text-justify whitespace-pre-wrap"></p>
-                </div>
-
-                <div class="mb-8">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">9. Avaliação e Acompanhamento
-                    </h3>
-                    <p id="prev-avaliacao" class="text-sm text-justify whitespace-pre-wrap"></p>
-                </div>
-
-                <div class="mt-12 pt-8">
-                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-8">10. Assinaturas</h3>
-                    <div class="flex justify-between mt-12 px-4 gap-8">
-                        <div class="flex-1 text-center">
-                            <div class="border-t border-black w-full mb-2"></div>
-                            <p id="prev-sig-resp" class="font-bold text-sm"></p>
-                            <p class="text-xs text-gray-600">Responsável pelo plano</p>
-                        </div>
-                        <div class="flex-1 text-center">
-                            <div class="border-t border-black w-full mb-2"></div>
-                            <p id="prev-sig-sup" class="font-bold text-sm"></p>
-                            <p class="text-xs text-gray-600">Supervisor/Orientador</p>
-                        </div>
-                    </div>
-                    <div class="mt-8 text-right text-sm">
-                        Data: ____/____/________
-                    </div>
-                </div>
-
-                <!-- Document Content Ends Here -->
             </div>
         </div>
     </div>
@@ -400,70 +302,57 @@
     </footer>
 
     <script>
-        // Mappings for simple text fields
-        const textMappings = {
-            'input-titulo': 'prev-titulo',
-            'input-responsavel': 'prev-responsavel',
-            'input-justificativa': 'prev-justificativa',
-            'input-objetivo-geral': 'prev-objetivo-geral',
-            'input-atividades': 'prev-atividades',
-            'input-metodologia': 'prev-metodologia',
-            'input-recursos': 'prev-recursos',
-            'input-resultados': 'prev-resultados',
-            'input-avaliacao': 'prev-avaliacao',
-            'input-sig-resp': 'prev-sig-resp',
-            'input-sig-sup': 'prev-sig-sup'
-        };
+        // Debounce function to limit render calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
-        // Initialize event listeners
+        // Initialize Listeners
         document.addEventListener('DOMContentLoaded', () => {
-            // Text inputs
-            for (const [inputId, prevId] of Object.entries(textMappings)) {
-                const input = document.getElementById(inputId);
-                const prev = document.getElementById(prevId);
+            const render = debounce(renderDocument, 500);
 
-                if (input && prev) {
-                    input.addEventListener('input', () => {
-                        prev.textContent = input.value;
-                    });
-                }
+            // Inputs
+            const allInputs = document.querySelectorAll('input, textarea, select');
+            allInputs.forEach(el => el.addEventListener('input', render));
+
+            // Initial render
+            setTimeout(renderDocument, 100);
+
+            // Ensure proper initialization of dynamic lists if empty
+            if (document.getElementById('container-cronograma').children.length === 0) {
+                addCronogramaItem();
             }
-
-            // NRE Select
-            const nreInput = document.getElementById('input-nre');
-            const nrePrev = document.getElementById('prev-nre');
-            if (nreInput && nrePrev) {
-                nreInput.addEventListener('change', () => {
-                    nrePrev.textContent = nreInput.value;
-                });
-            }
-
-            // Date Handling
-            const dateStart = document.getElementById('input-periodo-inicio');
-            const dateEnd = document.getElementById('input-periodo-fim');
-            const datePrev = document.getElementById('prev-periodo');
-
-            function updateDate() {
-                const s = dateStart.value ? new Date(dateStart.value).toLocaleDateString('pt-BR') : '...';
-                const e = dateEnd.value ? new Date(dateEnd.value).toLocaleDateString('pt-BR') : '...';
-
-                if (dateStart.value || dateEnd.value) {
-                    datePrev.textContent = `${s} a ${e}`;
-                } else {
-                    datePrev.textContent = '';
-                }
-            }
-            if (dateStart) dateStart.addEventListener('change', updateDate);
-            if (dateEnd) dateEnd.addEventListener('change', updateDate);
-
-            // Specific Objectives - Initial Listener
-            attachObjectiveListeners();
-
-            // Cronograma - Initial Item
-            addCronogramaItem();
         });
 
-        // Cronograma Logic
+        // ---------------------------------------------------------
+        // Dynamic Field Logic (Global Functions called by onclick)
+        // ---------------------------------------------------------
+
+        function addObjEspecifico() {
+            const container = document.getElementById('container-objetivos-especificos');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'obj-esp-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border mt-2';
+            input.placeholder = 'Outro objetivo específico';
+            container.appendChild(input);
+
+            // Attach listener to new input
+            const render = debounce(renderDocument, 500);
+            input.addEventListener('input', render);
+
+            // Render immediately
+            renderDocument();
+            input.focus();
+        }
+
         function addCronogramaItem() {
             const container = document.getElementById('container-cronograma');
             const div = document.createElement('div');
@@ -508,23 +397,167 @@
 
             // Attach listeners to new inputs
             const inputs = div.querySelectorAll('input');
-            inputs.forEach(inp => inp.addEventListener('input', updateCronograma));
+            const render = debounce(renderDocument, 500);
+            inputs.forEach(inp => inp.addEventListener('input', render));
+
+            // Render immediately
+            renderDocument();
         }
 
-        function updateCronograma() {
-            const sourceContainer = document.getElementById('container-cronograma');
-            const items = sourceContainer.querySelectorAll('#container-cronograma > div');
-            const targetContainer = document.getElementById('prev-cronograma-container');
-            targetContainer.innerHTML = '';
+        // ---------------------------------------------------------
+        // Main Render Function
+        // ---------------------------------------------------------
+        function renderDocument() {
+            const printArea = document.getElementById('print-area');
+            if (!printArea) return;
+            printArea.innerHTML = ''; // Clear current pages
 
-            items.forEach(item => {
-                const dateVal = item.querySelector('.crono-date').value;
-                let dateFormatted = '';
-                if (dateVal) {
-                    const [y, m, d] = dateVal.split('-');
-                    dateFormatted = `${d}/${m}/${y}`;
+            // Collection of content blocks to be rendered
+            const blocks = collectContentBlocks();
+
+            let currentPage = createNewPage();
+            printArea.appendChild(currentPage);
+
+            // Helper to get max content height
+            const getMaxHeight = (page) => {
+                const style = window.getComputedStyle(page);
+                const h = page.clientHeight; // Total height including padding
+                const pt = parseFloat(style.paddingTop);
+                const pb = parseFloat(style.paddingBottom);
+                return h - pt - pb;
+            };
+
+            // Append blocks
+            blocks.forEach(block => {
+                // Real implementation:
+                // 1. Append HTML to a wrapper div
+                const contentWrapper = document.createElement('div');
+                contentWrapper.innerHTML = block;
+                const element = contentWrapper.firstElementChild;
+
+                if (!element) return;
+
+                currentPage.appendChild(element);
+
+                // Check if we exceeded page height
+                // We use scrollHeight vs valid A4 height (297mm approx 1123px @ 96dpi)
+                // A safer check is to see if the element's bottom is way down.
+
+                const pageRect = currentPage.getBoundingClientRect();
+                const elemRect = element.getBoundingClientRect();
+
+                // Max height logic: 297mm - 40mm padding = 257mm content.
+                // 257mm * 3.78 ~= 971px.
+                // Let's perform a check.
+                const pageStyle = window.getComputedStyle(currentPage);
+                const paddingBottom = parseFloat(pageStyle.paddingBottom);
+                const bottomLimit = pageRect.bottom - paddingBottom;
+
+                // Tolerance 5px
+                if (elemRect.bottom > bottomLimit + 5) {
+                    // Overflow detected!
+                    // Remove element from this page
+                    currentPage.removeChild(element);
+
+                    // Create new page
+                    currentPage = createNewPage();
+                    printArea.appendChild(currentPage);
+
+                    // Add element to new page
+                    currentPage.appendChild(element);
                 }
+            });
+        }
 
+        function createNewPage() {
+            const page = document.createElement('div');
+            page.className = 'a4-page bg-white shadow-lg p-[20mm] min-h-[297mm] text-black relative flex flex-col';
+            return page;
+        }
+
+        function collectContentBlocks() {
+            // Helper to get value
+            const getVal = (id) => {
+                const el = document.getElementById(id);
+                return el ? el.value : '';
+            };
+
+            const blocks = [];
+
+            // 1. Header (Banner)
+            blocks.push(`
+                <div class="relative mb-8 text-center h-40 overflow-hidden rounded-lg shadow-sm border border-gray-200 shrink-0">
+                    <img src="header_bg.png" alt="Banner" class="w-full h-full object-cover object-center">
+                    <img src="./carimbo.png" alt="Carimbo" class="absolute bottom-[-10px] right-[10%] w-40 opacity-90 mix-blend-multiply transform -rotate-12 pointer-events-none">
+                </div>
+            `);
+
+            // 2. Identificação
+            const titulo = getVal('input-titulo');
+            const resp = getVal('input-responsavel');
+            const nre = getVal('input-nre');
+            const start = getVal('input-periodo-inicio');
+            const end = getVal('input-periodo-fim');
+            const dateStr = (start || end) ? `${start ? new Date(start + 'T00:00:00').toLocaleDateString('pt-BR') : '...'} a ${end ? new Date(end + 'T00:00:00').toLocaleDateString('pt-BR') : '...'}` : '';
+
+            blocks.push(`
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">1. Identificação</h3>
+                    <table class="w-full text-sm border-collapse">
+                        <tr><td class="font-bold py-1 w-48">Título do Projeto:</td><td class="py-1 border-b border-dotted border-gray-400">${titulo}</td></tr>
+                        <tr><td class="font-bold py-1">Embaixador Responsável:</td><td class="py-1 border-b border-dotted border-gray-400">${resp}</td></tr>
+                        <tr><td class="font-bold py-1">NRE:</td><td class="py-1 border-b border-dotted border-gray-400">${nre}</td></tr>
+                        <tr><td class="font-bold py-1">Período:</td><td class="py-1 border-b border-dotted border-gray-400">${dateStr}</td></tr>
+                    </table>
+                </div>
+            `);
+
+            // 3. Justificativa
+            blocks.push(createSectionBlock('2. Justificativa', getVal('input-justificativa')));
+
+            // 4. Objetivos
+            const objGeral = getVal('input-objetivo-geral');
+            const objInputs = document.querySelectorAll('.obj-esp-input');
+            let objItems = '';
+            objInputs.forEach(inp => {
+                if (inp.value.trim()) objItems += `<li>${inp.value}</li>`;
+            });
+
+            let objContent = `
+                <div class="mb-2">
+                    <span class="font-bold text-sm block">Objetivo Geral:</span>
+                    <p class="text-sm text-justify whitespace-pre-wrap">${objGeral}</p>
+                </div>
+            `;
+
+            if (objItems) {
+                objContent += `
+                     <div class="mb-2">
+                        <span class="font-bold text-sm block">Objetivos Específicos:</span>
+                        <ul class="list-disc list-inside text-sm pl-2">${objItems}</ul>
+                     </div>
+                `;
+            }
+
+            blocks.push(`
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">3. Objetivos</h3>
+                    ${objContent}
+                </div>
+            `);
+
+            // 5. Atividades
+            blocks.push(createSectionBlock('4. Atividades a Desenvolver', getVal('input-atividades')));
+
+            // 6. Metodologia
+            blocks.push(createSectionBlock('5. Metodologia', getVal('input-metodologia')));
+
+            // 7. Cronograma
+            blocks.push(`<div class="mb-4"><h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">6. Cronograma</h3></div>`);
+
+            const cronoItems = document.getElementById('container-cronograma').querySelectorAll('#container-cronograma > div');
+            cronoItems.forEach(item => {
+                const dateVal = item.querySelector('.crono-date').value;
                 const activityVal = item.querySelector('.crono-activity').value;
                 const respVal = item.querySelector('.crono-resp').value;
                 const localVal = item.querySelector('.crono-local').value;
@@ -533,25 +566,18 @@
                 const recFinVal = item.querySelector('.crono-rec-fin').value;
 
                 if (dateVal || activityVal || respVal || localVal) {
-                    const card = document.createElement('div');
-                    card.className = 'border border-gray-800 rounded p-3 text-sm break-inside-avoid shadow-sm bg-white';
-
-                    card.innerHTML = `
-                        <div class="flex flex-col gap-2">
-                            <!-- Row 1: Date Header -->
-                            <div class="border-b border-gray-200 pb-1">
+                    const dateFormatted = dateVal ? new Date(dateVal + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+                    blocks.push(`
+                        <div class="border border-gray-800 rounded p-3 text-sm shadow-sm bg-white mb-4 break-inside-avoid">
+                             <div class="border-b border-gray-200 pb-1">
                                 <span class="font-bold text-gray-800 text-xs uppercase block">Data de início</span>
                                 <span class="text-black font-semibold">${dateFormatted}</span>
                             </div>
-
-                            <!-- Row 2: Activity Description -->
-                            <div class="border-b border-gray-200 pb-2">
+                            <div class="border-b border-gray-200 pb-2 mt-2">
                                 <span class="font-bold text-gray-800 text-xs uppercase block">Atividade</span>
                                 <span class="text-black block mt-1">${activityVal}</span>
                             </div>
-                            
-                            <!-- Row 3: Resp & Local -->
-                            <div class="flex flex-col sm:flex-row gap-4 border-b border-gray-200 pb-2">
+                            <div class="flex flex-col sm:flex-row gap-4 border-b border-gray-200 pb-2 mt-2">
                                 <div class="flex-1">
                                     <span class="font-bold text-gray-800 text-xs uppercase block">Responsável</span>
                                     <span class="text-black text-sm">${respVal}</span>
@@ -561,86 +587,94 @@
                                     <span class="text-black text-sm">${localVal}</span>
                                 </div>
                             </div>
-
-                            <!-- Row 4: Resources -->
-                            <div class="bg-gray-50 p-2 rounded border border-gray-200">
+                            <div class="bg-gray-50 p-2 rounded border border-gray-200 mt-2">
                                 <div class="grid grid-cols-3 gap-2 text-xs">
-                                    <div>
-                                        <span class="font-bold text-gray-600 block mb-1">R. Humanos</span>
-                                        <div class="text-black min-h-[1rem] break-words">${recHumVal}</div>
-                                    </div>
-                                    <div class="border-l border-gray-300 pl-2">
-                                        <span class="font-bold text-gray-600 block mb-1">R. Materiais</span>
-                                        <div class="text-black min-h-[1rem] break-words">${recMatVal}</div>
-                                    </div>
-                                    <div class="border-l border-gray-300 pl-2">
-                                        <span class="font-bold text-gray-600 block mb-1">R. Financeiros</span>
-                                        <div class="text-black min-h-[1rem] break-words">${recFinVal}</div>
-                                    </div>
+                                    <div><span class="font-bold text-gray-600 block mb-1">R. Humanos</span><div class="text-black min-h-[1rem] break-words">${recHumVal}</div></div>
+                                    <div class="border-l border-gray-300 pl-2"><span class="font-bold text-gray-600 block mb-1">R. Materiais</span><div class="text-black min-h-[1rem] break-words">${recMatVal}</div></div>
+                                    <div class="border-l border-gray-300 pl-2"><span class="font-bold text-gray-600 block mb-1">R. Financeiros</span><div class="text-black min-h-[1rem] break-words">${recFinVal}</div></div>
                                 </div>
                             </div>
                         </div>
-                    `;
-                    targetContainer.appendChild(card);
+                    `);
                 }
             });
 
-            if (targetContainer.children.length === 0) {
-                targetContainer.innerHTML = '<p class="text-gray-400 italic text-center text-sm py-4">Nenhuma atividade adicionada.</p>';
-            }
+            // 8. Recursos
+            blocks.push(createSectionBlock('7. Recursos Necessários', getVal('input-recursos')));
+
+            // 9. Resultados
+            blocks.push(createSectionBlock('8. Resultados Esperados', getVal('input-resultados')));
+
+            // 10. Avaliação
+            blocks.push(createSectionBlock('9. Avaliação e Acompanhamento', getVal('input-avaliacao')));
+
+            // 11. Assinaturas
+            const sigResp = getVal('input-sig-resp');
+            const sigSup = getVal('input-sig-sup');
+            blocks.push(`
+                <div class="mt-8 pt-8">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-8">10. Assinaturas</h3>
+                    <div class="flex justify-between mt-12 px-4 gap-8">
+                        <div class="flex-1 text-center">
+                            <div class="border-t border-black w-full mb-2"></div>
+                            <p class="font-bold text-sm">${sigResp}</p>
+                            <p class="text-xs text-gray-600">Responsável pelo plano</p>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <div class="border-t border-black w-full mb-2"></div>
+                            <p class="font-bold text-sm">${sigSup}</p>
+                            <p class="text-xs text-gray-600">Supervisor/Orientador</p>
+                        </div>
+                    </div>
+                     <div class="mt-8 text-right text-sm">Data: ____/____/________</div>
+                </div>
+            `);
+
+            return blocks;
         }
 
-        function attachObjectiveListeners() {
-            const inputs = document.querySelectorAll('.obj-esp-input');
-            inputs.forEach(input => {
-                input.removeEventListener('input', updateObjectives);
-                input.addEventListener('input', updateObjectives);
-            });
-        }
-
-        function updateObjectives() {
-            const objList = document.getElementById('prev-objetivos-especificos');
-            objList.innerHTML = '';
-            const inputs = document.querySelectorAll('.obj-esp-input');
-            inputs.forEach(input => {
-                const val = input.value;
-                if (val.trim()) {
-                    const li = document.createElement('li');
-                    li.textContent = val;
-                    objList.appendChild(li);
-                }
-            });
-        }
-
-        function addObjEspecifico() {
-            const container = document.getElementById('container-objetivos-especificos');
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'obj-esp-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border mt-2';
-            input.placeholder = 'Outro objetivo específico';
-            container.appendChild(input);
-            attachObjectiveListeners();
+        function createSectionBlock(title, content) {
+            return `
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg uppercase border-b border-gray-400 mb-2">${title}</h3>
+                    <p class="text-sm text-justify whitespace-pre-wrap">${content}</p>
+                </div>
+            `;
         }
 
         function generatePDF() {
-            const element = document.getElementById('preview-container');
+            const element = document.getElementById('print-area');
+            const pages = element.querySelectorAll('.a4-page');
+
             const opt = {
                 margin: 0,
                 filename: 'Plano_de_Trabalho.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: 'css', before: '.a4-page' }
             };
             html2pdf().set(opt).from(element).save();
         }
 
         function generateWord() {
+            // For Word, we iterate pages and add a separator
+            const pages = document.querySelectorAll('.a4-page');
+            let contentHTML = '';
+
+            pages.forEach((page, index) => {
+                contentHTML += page.innerHTML;
+                if (index < pages.length - 1) {
+                    contentHTML += '<br style="page-break-before:always" />';
+                }
+            });
+
             const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
                 "xmlns:w='urn:schemas-microsoft-com:office:word' " +
                 "xmlns='http://www.w3.org/TR/REC-html40'>" +
                 "<head><meta charset='utf-8'><title>Plano de Trabalho</title></head><body>";
             const footer = "</body></html>";
-            const element = document.getElementById('preview-container').innerHTML;
+
             const styles = `
                 <style>
                     body { font-family: Arial, sans-serif; }
@@ -648,9 +682,11 @@
                     td, th { border: 1px solid black; padding: 5px; }
                     .no-border { border: none; }
                     h1, h2, h3 { color: black; }
+                    /* Banner fix for Word */
+                    img { max-width: 100%; }
                 </style>
             `;
-            const sourceHTML = header + styles + element + footer;
+            const sourceHTML = header + styles + contentHTML + footer;
             const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
             const fileDownload = document.createElement("a");
             document.body.appendChild(fileDownload);

@@ -467,6 +467,7 @@
                     uid: user.uid
                 };
                 updateUIForLogin();
+                migrateLocalData(); // Check and migrate old data
                 loadPlansIndex(); // Refresh list from Firestore
             } else {
                 currentUser = null;
@@ -474,6 +475,57 @@
                 // The overlay is default visible, unhidden by reload
             }
         });
+
+        // ---------------------------------------------------------
+        // Migration Logic (Local -> Cloud)
+        // ---------------------------------------------------------
+
+        async function migrateLocalData() {
+            if (!currentUser) return;
+            const migrationKey = `migration_complete_${currentUser.email}`;
+            if (localStorage.getItem(migrationKey)) return; // Already migrated
+
+            const indexKey = `plans_index_${currentUser.email}`;
+            const rawIndex = localStorage.getItem(indexKey);
+            
+            if (!rawIndex) {
+                 localStorage.setItem(migrationKey, 'true'); // Nothing to migrate
+                 return;
+            }
+
+            try {
+                const index = JSON.parse(rawIndex);
+                let count = 0;
+
+                console.log(`Starting migration for ${index.length} plans...`);
+
+                for (const entry of index) {
+                    const localKey = `plan_data_${entry.id}`;
+                    const rawData = localStorage.getItem(localKey);
+                    
+                    if (rawData) {
+                        const data = JSON.parse(rawData);
+                        // Upload to Firestore
+                        await db.collection('users')
+                            .doc(currentUser.uid)
+                            .collection('plans')
+                            .doc(entry.id)
+                            .set(data);
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    alert(`Migração concluída! ${count} planos recuperados do seu computador para a nuvem.`);
+                }
+                
+                // Mark as done so we don't try again
+                localStorage.setItem(migrationKey, 'true');
+
+            } catch (e) {
+                console.error("Migration failed", e);
+            }
+        }
 
         function updateUIForLogin() {
             if (!currentUser) return;

@@ -9,8 +9,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Firebase SDKs (Compat for easier HTML usage) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -80,14 +84,13 @@
                 <strong>@escola.pr.gov.br</strong> para acessar o Gerador.
             </p>
 
-            <!-- Google Sign-In Button Container -->
-            <div id="g_id_onload"
-                data-client_id="739830653809-vh6djiiio5o8rm0dmcjj813vqnl5cic1.apps.googleusercontent.com"
-                data-callback="handleCredentialResponse" data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"
-                data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left">
-            </div>
+            <!-- Firebase Sign-In Button -->
+            <button onclick="loginWithGoogle()"
+                class="w-full flex items-center justify-center gap-3 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-medium py-3 px-4 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"
+                    alt="Google">
+                <span>Entrar com Google</span>
+            </button>
 
             <p id="login-error"
                 class="hidden text-red-600 text-xs mt-4 font-medium p-2 bg-red-50 rounded border border-red-100"></p>
@@ -403,53 +406,74 @@
         let currentPlanId = null;
 
         // ---------------------------------------------------------
-        // Google Login & Session Management
+        // Firebase Configuration & Initialization
         // ---------------------------------------------------------
 
-        function handleCredentialResponse(response) {
-            try {
-                const responsePayload = decodeJwt(response.credential);
+        // SUBSTITUA COM SUAS CHAVES DO FIREBASE AQUI
+        // Você pode obter isso no Console do Firebase > Configurações do Projeto > Geral > Seus aplicativos
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJMxrPMG0lA44FbwtPDIWrxmGLUrJdZ4Y",
+            authDomain: "geradorplanotrabalho.firebaseapp.com",
+            projectId: "geradorplanotrabalho",
+            storageBucket: "geradorplanotrabalho.firebasestorage.app",
+            messagingSenderId: "697029999776",
+            appId: "1:697029999776:web:953bdee8dd335d91469dc5"
+        };
 
-                // Set user session
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ---------------------------------------------------------
+        // Authentication Logic
+        // ---------------------------------------------------------
+
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            // Optional: force account selection
+            provider.setCustomParameters({ prompt: 'select_account' });
+
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // User logged in!
+                    // updateUIForLogin handled by onAuthStateChanged
+                })
+                .catch((error) => {
+                    console.error("Login Error:", error);
+                    const errDiv = document.getElementById('login-error');
+                    errDiv.innerText = "Erro no login: " + error.message;
+                    errDiv.classList.remove('hidden');
+                });
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                location.reload();
+            });
+        }
+
+        // Listen for auth state changes
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Check email domain restrictions if necessary
+                // const email = user.email;
+                // if (!email.endsWith('@escola.pr.gov.br')) { ... }
+
                 currentUser = {
-                    email: responsePayload.email,
-                    name: responsePayload.name,
-                    picture: responsePayload.picture
+                    email: user.email,
+                    name: user.displayName,
+                    picture: user.photoURL,
+                    uid: user.uid
                 };
-
-                // Save session marker
-                localStorage.setItem('user_session', JSON.stringify(currentUser));
-
-                // UI Updates
                 updateUIForLogin();
-
-                // Check for existing plans
-                const index = getPlansIndex();
-                if (index.length > 0) {
-                    // Show dashboard to choose
-                    openPlansModal();
-                    // Load most recent for background
-                    loadPlan(index[0].id);
-                } else {
-                    // Start new plan automatically
-                    createNewPlan(true);
-                }
-
-            } catch (e) {
-                console.error("Login Error:", e);
-                document.getElementById('login-error').innerText = "Erro ao processar login. Tente novamente.";
-                document.getElementById('login-error').classList.remove('hidden');
+                loadPlansIndex(); // Refresh list from Firestore
+            } else {
+                currentUser = null;
+                // Show login overlay if not already shown? 
+                // The overlay is default visible, unhidden by reload
             }
-        }
-
-        function decodeJwt(token) {
-            var base64Url = token.split('.')[1];
-            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        }
+        });
 
         function updateUIForLogin() {
             if (!currentUser) return;
@@ -469,36 +493,12 @@
             document.getElementById('modal-email-display').innerText = currentUser.email;
         }
 
-        function logout() {
-            localStorage.removeItem('user_session');
-            // We do NOT clear plans data
-            currentUser = null;
-            currentPlanId = null;
-            location.reload();
-        }
-
         function checkSession() {
-            const savedSession = localStorage.getItem('user_session');
-            if (savedSession) {
-                try {
-                    currentUser = JSON.parse(savedSession);
-                    updateUIForLogin();
-
-                    const index = getPlansIndex();
-                    if (index.length > 0) {
-                        loadPlan(index[0].id);
-                    } else {
-                        currentPlanId = generateUUID(); // Start fresh or keep strictly empty
-                    }
-                } catch (e) {
-                    console.error("Invalid session", e);
-                    localStorage.removeItem('user_session');
-                }
-            }
+            // Firebase handles this automatically via onAuthStateChanged
         }
 
         // ---------------------------------------------------------
-        // Plan Management & Persistence
+        // Plan Management with Firestore
         // ---------------------------------------------------------
 
         function generateUUID() {
@@ -508,18 +508,40 @@
             });
         }
 
-        function getPlansIndex() {
-            if (!currentUser) return [];
-            const key = `plans_index_${currentUser.email}`;
-            const raw = localStorage.getItem(key);
-            return raw ? JSON.parse(raw) : [];
+        // --- Plans Index (Now just querying the collection) ---
+
+        async function loadPlansIndex() {
+            if (!currentUser) return;
+
+            try {
+                const snapshot = await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('plans')
+                    .orderBy('updatedAt', 'desc')
+                    .get();
+
+                const plans = [];
+                snapshot.forEach(doc => {
+                    plans.push(doc.data());
+                });
+
+                // If no plans, initiate blank state
+                if (plans.length === 0) {
+                    createNewPlan(true); // Create local blank
+                } else if (!currentPlanId) {
+                    // Load most recent
+                    loadPlan(plans[0].id);
+                }
+            } catch (e) {
+                console.error("Error loading index:", e);
+                // Fallback or alert
+                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    alert("Atenção: Configure as chaves do Firebase no arquivo index.html para funcionar!");
+                }
+            }
         }
 
-        function savePlansIndex(index) {
-            if (!currentUser) return;
-            const key = `plans_index_${currentUser.email}`;
-            localStorage.setItem(key, JSON.stringify(index));
-        }
+        // --- UI Modal ---
 
         function openPlansModal() {
             if (!currentUser) return;
@@ -531,39 +553,49 @@
             document.getElementById('plans-modal').classList.add('hidden');
         }
 
-        function renderPlansList() {
+        async function renderPlansList() {
             const container = document.getElementById('plans-list-container');
-            const index = getPlansIndex();
+            container.innerHTML = '<p class="text-center text-gray-400">Carregando...</p>';
 
-            if (index.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg><p class="text-gray-500">Nenhum plano encontrado.</p></div>';
-            } else {
-                container.innerHTML = index.map(plan => `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg mb-3 transition-colors ${plan.id === currentPlanId ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : ''}">
-                        <div class="cursor-pointer flex-1" onclick="loadPlan('${plan.id}'); closePlansModal();">
-                            <h3 class="font-bold text-gray-800 ${!plan.title ? 'italic text-gray-500' : ''}">${plan.title || '(Sem Título)'}</h3>
-                            <p class="text-xs text-gray-500">Última edição: ${new Date(plan.updatedAt).toLocaleString('pt-BR')}</p>
+            if (!currentUser) return;
+
+            try {
+                const snapshot = await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('plans')
+                    .orderBy('updatedAt', 'desc')
+                    .get();
+
+                const plans = [];
+                snapshot.forEach(doc => {
+                    plans.push(doc.data());
+                });
+
+                if (plans.length === 0) {
+                    container.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><p class="text-gray-500">Nenhum plano encontrado.</p></div>';
+                } else {
+                    container.innerHTML = plans.map(plan => `
+                        <div class="flex items-center justify-between p-4 bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg mb-3 transition-colors ${plan.id === currentPlanId ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : ''}">
+                            <div class="cursor-pointer flex-1" onclick="loadPlan('${plan.id}'); closePlansModal();">
+                                <h3 class="font-bold text-gray-800 ${!plan.title ? 'italic text-gray-500' : ''}">${plan.title || '(Sem Título)'}</h3>
+                                <p class="text-xs text-gray-500">Última edição: ${plan.updatedAt ? new Date(plan.updatedAt).toLocaleString('pt-BR') : 'N/A'}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="deletePlan('${plan.id}')" class="text-red-500 hover:bg-red-100 p-2 rounded-full" title="Excluir">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                             <button onclick="loadPlan('${plan.id}'); closePlansModal();" class="text-blue-600 hover:bg-blue-100 p-2 rounded-full" title="Abrir">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </button>
-                            <button onclick="deletePlan('${plan.id}')" class="text-red-500 hover:bg-red-100 p-2 rounded-full" title="Excluir">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
+                    `).join('');
+                }
+            } catch (e) {
+                container.innerHTML = '<p class="text-center text-red-400">Erro ao carregar planos.</p>';
             }
         }
 
         function createNewPlan(skipModalClose = false) {
-            if (!currentUser) return;
-
             // Clear inputs
             document.querySelectorAll('input, textarea, select').forEach(el => el.value = '');
             document.getElementById('container-cronograma').innerHTML = '';
@@ -571,54 +603,45 @@
 
             // Add defaults
             addCronogramaItem();
-
-            const objContainer = document.getElementById('container-objetivos-especificos');
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'obj-esp-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border mt-2';
-            input.placeholder = 'Objetivo específico';
-            objContainer.appendChild(input);
-            input.addEventListener('input', debounce(renderDocument, 500));
-            input.addEventListener('input', debounce(() => saveData(false), 2000));
+            addObjEspecifico(true); // helper to add blank one
 
             // Generate new ID
             currentPlanId = generateUUID();
-
             renderDocument();
 
             if (!skipModalClose) closePlansModal();
         }
 
-        function deletePlan(id) {
-            if (!confirm('Tem certeza que deseja excluir este plano? Esta ação não pode ser desfeita.')) return;
+        async function deletePlan(id) {
+            if (!confirm('Tem certeza que deseja excluir este plano?')) return;
+            if (!currentUser) return;
 
-            // Remove data
-            localStorage.removeItem(`plan_data_${id}`);
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('plans').doc(id).delete();
+                renderPlansList(); // Refresh list
 
-            // Update index
-            let index = getPlansIndex();
-            index = index.filter(p => p.id !== id);
-            savePlansIndex(index);
-
-            renderPlansList();
-
-            // If deleting current, create new one
-            if (id === currentPlanId) {
-                createNewPlan(true);
+                if (id === currentPlanId) {
+                    createNewPlan(true);
+                }
+            } catch (e) {
+                console.error("Error deleting", e);
+                alert("Erro ao excluir.");
             }
         }
 
-        function loadPlan(id) {
+        async function loadPlan(id) {
             if (!currentUser) return;
 
-            const raw = localStorage.getItem(`plan_data_${id}`);
-            if (!raw) {
-                // If checking session loads a non-existent, quietly fail or start new
-                return;
-            }
+            // Show loading indicator? 
+            console.log("Loading plan...", id);
 
             try {
-                const data = JSON.parse(raw);
+                const doc = await db.collection('users').doc(currentUser.uid).collection('plans').doc(id).get();
+                if (!doc.exists) {
+                    console.error("Plan not found");
+                    return;
+                }
+                const data = doc.data();
                 currentPlanId = id;
 
                 // Populate Static
@@ -634,22 +657,10 @@
                 objContainer.innerHTML = '';
                 if (data.objetivosEspecificos && data.objetivosEspecificos.length > 0) {
                     data.objetivosEspecificos.forEach(val => {
-                        const input = document.createElement('input');
-                        input.type = 'text';
-                        input.className = 'obj-esp-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border mt-2';
-                        input.value = val;
-                        objContainer.appendChild(input);
-                        input.addEventListener('input', debounce(renderDocument, 500));
-                        input.addEventListener('input', debounce(() => saveData(false), 2000));
+                        createObjInput(val);
                     });
                 } else {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.className = 'obj-esp-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border';
-                    input.placeholder = 'Objetivo específico';
-                    objContainer.appendChild(input);
-                    input.addEventListener('input', debounce(renderDocument, 500));
-                    input.addEventListener('input', debounce(() => saveData(false), 2000));
+                    createObjInput('');
                 }
 
                 // Populate Cronograma
@@ -657,50 +668,10 @@
                 cronoContainer.innerHTML = '';
                 if (data.cronograma && data.cronograma.length > 0) {
                     data.cronograma.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'flex flex-col gap-2 border p-3 rounded-lg bg-gray-50';
-                        div.innerHTML = `
-                            <div class="flex flex-col">
-                                <label class="text-xs text-gray-500 font-medium">Data de início da atividade</label>
-                                <input type="date" class="crono-date block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="${item.date || ''}">
-                            </div>
-                            <div class="flex flex-col">
-                                <label class="text-xs text-gray-500 font-medium">Atividade</label>
-                                <input type="text" class="crono-activity block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Descrição da atividade" value="${item.activity || ''}">
-                            </div>
-                            <div class="flex gap-2">
-                                <div class="w-1/2 flex flex-col">
-                                    <label class="text-xs text-gray-500 font-medium">Responsável</label>
-                                    <input type="text" class="crono-resp block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Nome" value="${item.resp || ''}">
-                                </div>
-                                <div class="w-1/2 flex flex-col">
-                                    <label class="text-xs text-gray-500 font-medium">Local</label>
-                                    <input type="text" class="crono-local block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Local" value="${item.local || ''}">
-                                </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <div class="w-1/3 flex flex-col">
-                                    <label class="text-xs text-gray-500 font-medium">Rec. Humanos</label>
-                                    <input type="text" class="crono-rec-hum block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Humanos" value="${item.recHum || ''}">
-                                </div>
-                                <div class="w-1/3 flex flex-col">
-                                    <label class="text-xs text-gray-500 font-medium">Rec. Materiais</label>
-                                    <input type="text" class="crono-rec-mat block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Materiais" value="${item.recMat || ''}">
-                                </div>
-                                <div class="w-1/3 flex flex-col">
-                                    <label class="text-xs text-gray-500 font-medium">Rec. Financeiros</label>
-                                    <input type="text" class="crono-rec-fin block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Financeiros" value="${item.recFin || ''}">
-                                </div>
-                            </div>
-                        `;
-                        cronoContainer.appendChild(div);
-                        const inputs = div.querySelectorAll('input');
-                        inputs.forEach(inp => {
-                            inp.addEventListener('input', debounce(renderDocument, 500));
-                            inp.addEventListener('input', debounce(() => saveData(false), 2000));
-                        });
+                        createCronogramaInput(item);
                     });
                 } else {
+                    // addCronogramaItem called by createCronogramaInput not needed, separate logic
                     addCronogramaItem();
                 }
 
@@ -708,86 +679,158 @@
                 renderDocument();
 
             } catch (e) {
-                console.error('Error parsing plan data', e);
+                console.error("Error loading plan", e);
             }
         }
 
-        function saveData(manual = false) {
-            if (!currentUser || !currentUser.email) return;
+        // Helpers for UI creation to avoid duplication
+        function createObjInput(value) {
+            const container = document.getElementById('container-objetivos-especificos');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'obj-esp-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border mt-2';
+            input.value = value || '';
+            input.placeholder = 'Objetivo específico';
+            container.appendChild(input);
+
+            // Re-attach listeners is tricky because they are local in original code
+            // We need global listener delegation or re-attach
+            // Simplified: just call attach listeners helper
+            attachListeners(input);
+        }
+
+        function createCronogramaInput(item) {
+            // Re-use addCronogramaItem logic but populate values? 
+            // Ideally refactor addCronogramaItem to accept data.
+            // Implemented inline to be safe.
+            const container = document.getElementById('container-cronograma');
+            const div = document.createElement('div');
+            div.className = 'flex flex-col gap-2 border p-3 rounded-lg bg-gray-50';
+            div.innerHTML = `
+                <div class="flex flex-col">
+                    <label class="text-xs text-gray-500 font-medium">Data de início da atividade</label>
+                    <input type="date" value="${item.date || ''}" class="crono-date block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs text-gray-500 font-medium">Atividade</label>
+                    <input type="text" value="${item.activity || ''}" class="crono-activity block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Descrição da atividade">
+                </div>
+                <div class="flex gap-2">
+                    <div class="w-1/2 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Responsável</label>
+                        <input type="text" value="${item.resp || ''}" class="crono-resp block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Nome">
+                    </div>
+                    <div class="w-1/2 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Local</label>
+                        <input type="text" value="${item.local || ''}" class="crono-local block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Local">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="w-1/3 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Rec. Humanos</label>
+                        <input type="text" value="${item.recHum || ''}" class="crono-rec-hum block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Humanos">
+                    </div>
+                    <div class="w-1/3 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Rec. Materiais</label>
+                        <input type="text" value="${item.recMat || ''}" class="crono-rec-mat block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Materiais">
+                    </div>
+                    <div class="w-1/3 flex flex-col">
+                        <label class="text-xs text-gray-500 font-medium">Rec. Financeiros</label>
+                        <input type="text" value="${item.recFin || ''}" class="crono-rec-fin block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="R. Financeiros">
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            // Attach listeners
+            div.querySelectorAll('input').forEach(attachListeners);
+        }
+
+        function attachListeners(el) {
+            const render = debounce(renderDocument, 500);
+            const autoSave = debounce(() => saveData(false), 1000);
+            el.addEventListener('input', render);
+            el.addEventListener('input', autoSave);
+        }
+
+        async function saveData(manual = false) {
+            if (!currentUser) return;
             if (!currentPlanId) currentPlanId = generateUUID();
 
-            const title = document.getElementById('input-titulo').value;
+            try {
+                const title = document.getElementById('input-titulo').value;
 
-            const data = {
-                id: currentPlanId,
-                updatedAt: new Date().toISOString(),
-                title: title,
-                inputs: {}
-            };
+                const data = {
+                    id: currentPlanId,
+                    updatedAt: new Date().toISOString(),
+                    title: title,
+                    inputs: {},
+                    objetivosEspecificos: [],
+                    cronograma: []
+                };
 
-            // 1. Static Inputs
-            const idsToSave = [
-                'input-titulo', 'input-responsavel', 'input-nre',
-                'input-periodo-inicio', 'input-periodo-fim',
-                'input-justificativa', 'input-objetivo-geral',
-                'input-atividades', 'input-metodologia',
-                'input-recursos', 'input-resultados', 'input-avaliacao',
-                'input-sig-resp', 'input-sig-sup'
-            ];
+                // 1. Static Inputs
+                const idsToSave = [
+                    'input-titulo', 'input-responsavel', 'input-nre',
+                    'input-periodo-inicio', 'input-periodo-fim',
+                    'input-justificativa', 'input-objetivo-geral',
+                    'input-atividades', 'input-metodologia',
+                    'input-recursos', 'input-resultados', 'input-avaliacao',
+                    'input-sig-resp', 'input-sig-sup'
+                ];
 
-            idsToSave.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) data.inputs[id] = el.value;
-            });
+                idsToSave.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) data.inputs[id] = el.value;
+                });
 
-            // 2. Dynamic: Objetivos Específicos
-            const objInputs = document.querySelectorAll('.obj-esp-input');
-            data.objetivosEspecificos = Array.from(objInputs).map(i => i.value).filter(v => v);
+                // 2. Dynamic: Objetivos Específicos
+                const objInputs = document.querySelectorAll('.obj-esp-input');
+                data.objetivosEspecificos = Array.from(objInputs).map(i => i.value).filter(v => v);
 
-            // 3. Dynamic: Cronograma
-            const cronoItems = document.querySelectorAll('#container-cronograma > div');
-            data.cronograma = Array.from(cronoItems).map(item => ({
-                date: item.querySelector('.crono-date').value,
-                activity: item.querySelector('.crono-activity').value,
-                resp: item.querySelector('.crono-resp').value,
-                local: item.querySelector('.crono-local').value,
-                recHum: item.querySelector('.crono-rec-hum').value,
-                recMat: item.querySelector('.crono-rec-mat').value,
-                recFin: item.querySelector('.crono-rec-fin').value,
-            }));
+                // 3. Dynamic: Cronograma
+                const cronoItems = document.querySelectorAll('#container-cronograma > div');
+                data.cronograma = Array.from(cronoItems).map(item => ({
+                    date: item.querySelector('.crono-date').value,
+                    activity: item.querySelector('.crono-activity').value,
+                    resp: item.querySelector('.crono-resp').value,
+                    local: item.querySelector('.crono-local').value,
+                    recHum: item.querySelector('.crono-rec-hum').value,
+                    recMat: item.querySelector('.crono-rec-mat').value,
+                    recFin: item.querySelector('.crono-rec-fin').value,
+                }));
 
-            // Save Data
-            localStorage.setItem(`plan_data_${currentPlanId}`, JSON.stringify(data));
+                // Save to Firestore
+                await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('plans')
+                    .doc(currentPlanId)
+                    .set(data);
 
-            // Update Index
-            const index = getPlansIndex();
-            const existingEntryIndex = index.findIndex(p => p.id === currentPlanId);
+                // Update UI status
+                const statusEl = document.getElementById('save-status');
+                if (statusEl) {
+                    statusEl.innerText = manual ? 'Salvo agora!' : 'Salvo auto.';
+                    statusEl.classList.remove('text-gray-200');
+                    statusEl.classList.add('text-green-300');
+                    setTimeout(() => {
+                        statusEl.innerText = 'Alterações salvas';
+                        statusEl.classList.add('text-gray-200');
+                        statusEl.classList.remove('text-green-300');
+                    }, 2000);
+                }
+            } catch (e) {
+                console.error("Error saving data:", e);
+                const statusEl = document.getElementById('save-status');
+                if (statusEl) {
+                    statusEl.innerText = 'Erro ao salvar!';
+                    statusEl.classList.remove('text-gray-200', 'text-green-300');
+                    statusEl.classList.add('text-red-400');
+                }
 
-            const entry = {
-                id: currentPlanId,
-                title: title,
-                updatedAt: data.updatedAt
-            };
-
-            if (existingEntryIndex >= 0) {
-                index[existingEntryIndex] = entry;
-            } else {
-                index.unshift(entry); // Add to top
+                if (e.code === 'permission-denied') {
+                    alert("Erro de permissão! Verifique as regras do Firestore.");
+                }
             }
-            // Sort by Date Descending
-            index.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-            savePlansIndex(index);
-
-            // Update UI status
-            const statusEl = document.getElementById('save-status');
-            statusEl.innerText = manual ? 'Salvo agora!' : 'Salvo auto.';
-            statusEl.classList.remove('text-gray-200');
-            statusEl.classList.add('text-green-300');
-            setTimeout(() => {
-                statusEl.innerText = 'Alterações salvas';
-                statusEl.classList.add('text-gray-200');
-                statusEl.classList.remove('text-green-300');
-            }, 2000);
         }
 
         // Debounce function to limit render calls
@@ -806,7 +849,12 @@
         // Initialize Listeners
         document.addEventListener('DOMContentLoaded', () => {
             const render = debounce(renderDocument, 500);
-            const autoSave = debounce(() => saveData(false), 2000); // Auto-save after 2s inactivity
+            const autoSave = debounce(() => saveData(false), 1000); // Auto-save after 1s
+
+            // Ensure we save before leaving
+            window.addEventListener('beforeunload', () => {
+                saveData(false);
+            });
 
             // Inputs
             // We need a way to attach listeners to all existing and future inputs
